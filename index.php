@@ -7,6 +7,15 @@
 session_cache_limiter(false);
 session_start();
 
+function valid_tag_filter($tag) {
+	$tags = explode(",", $tags);
+	$tags_clean = array();
+
+	foreach($tags as $tag) {
+		# code...
+	}
+}
+
 require 'lib/Slim/Slim/Slim.php';
 $app = new Slim();
 
@@ -21,10 +30,17 @@ $app->post('/article/new', function () use ($app) {
 		$conn = new Mongo();
 		$db = $conn->selectDB('myblogsite');
 		$coll = $db->selectCollection('articles');
+
+		// some dummy validating
+		$tags_clean = array_filter(array_map(function($tag) {
+			return trim($tag);
+		}, explode(',', $app->request()->post('id_tags'))));
+
 		$article = array(
 			'title' => $app->request()->post('id_title'),
 			'content' => $app->request()->post('id_content'),
-			'created_at' => new MongoDate()
+			'created_at' => new MongoDate(),
+			'tags' => $tags_clean
 		);
 		$coll->insert($article);
 	} catch(MongoConnectionException $e) {
@@ -34,6 +50,8 @@ $app->post('/article/new', function () use ($app) {
 	}
 
 	$app->flash('success', 'Article saved successfully. ID: ' . $article['_id']);
+	// die('<pre>' . print_r($b, 1) . '</pre>');
+
 	$app->redirect('/blog/article/new');
 });
 
