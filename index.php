@@ -20,12 +20,12 @@ require 'lib/Slim/Slim/Slim.php';
 $app = new Slim();
 
 //GET /article/new
-$app->get('/article/new', function () use ($app) {
+$app->get('/articles/new', function () use ($app) {
     $app->render('blogpost.html', array());
 });
 
 //POST /article/new
-$app->post('/article/new', function () use ($app) {
+$app->post('/articles/new', function () use ($app) {
 	try {
 		$conn = new Mongo();
 		$db = $conn->selectDB('myblogsite');
@@ -52,7 +52,7 @@ $app->post('/article/new', function () use ($app) {
 	$app->flash('success', 'Article saved successfully. ID: ' . $article['_id']);
 	// die('<pre>' . print_r($b, 1) . '</pre>');
 
-	$app->redirect('/blog/article/new');
+	$app->redirect('/blog/articles/new');
 });
 
 
