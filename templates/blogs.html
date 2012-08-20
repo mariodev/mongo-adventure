@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Home Page</title>
+	<link href="/blog/css/bootstrap.css" rel="stylesheet">
+	<style>
+		body {
+			padding-top: 60px;
+
+		}
+	</style>
+	<link href="/blog/css/bootstrap-responsive.css" rel="stylesheet">
+	<link href="/blog/css/base.css" rel="stylesheet">
+</head>
+<body>
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</a>
+				<a class="brand" href="#">Project name</a>
+				<div class="nav-collapse">
+					<ul class="nav">
+						<li class="active"><a href="#">Home</a></li>
+						<li><a href="#about">About</a></li>
+						<li><a href="#contact">Contact</a></li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<?php if($flash['success']): ?>
+			<div class="alert alert-success">
+				<button type="button" class="close" data-dismiss="alert">×</button>
+				<strong>Well done!</strong> <?php echo $flash['success'] ?>
+			</div>
+		<?php endif; ?>
+		<h1>My Blogs</h1>
+		<p>List of all my blogs</p>
+		<div class="row">
+			<div class="span12">
+				<?php while($cursor->hasNext()): $article = $cursor->getNext(); ?>
+					<h2><?php echo $article['title']; ?></h2>
+					<p>
+						<?php echo substr($article['content'], 0, 200) . '...'; ?>
+					</p>
+					<a href="/blog/articles/<?php echo $article['_id']; ?>">Read more</a>
+				<?php endwhile; ?>
+			</div>
+		</div>
+	</div>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+	<script src="/blog/js/bootstrap.js"></script>
+	<script src="/blog/js/application.js"></script>
+</body>
+</html>

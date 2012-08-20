@@ -19,12 +19,12 @@ function valid_tag_filter($tag) {
 require 'lib/Slim/Slim/Slim.php';
 $app = new Slim();
 
-//GET /article/new
+//GET /articles/new
 $app->get('/articles/new', function () use ($app) {
     $app->render('blogpost.html', array());
 });
 
-//POST /article/new
+//POST /articles/new
 $app->post('/articles/new', function () use ($app) {
 	try {
 		$conn = new Mongo();
@@ -55,6 +55,33 @@ $app->post('/articles/new', function () use ($app) {
 	$app->redirect('/blog/articles/new');
 });
 
+//GET /articles/:id
+$app->get('/articles/:id', function ($id) use ($app) {
+	try {
+		$conn = new Mongo();
+		$db = $conn->selectDB('myblogsite');
+		$coll = $db->selectCollection('articles');
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
 
+	$article = $coll->findOne(array('_id' => new MongoId($id)));
+
+    $app->render('blog.html', array('article' => $article));
+});
+
+//GET /articles
+$app->get('/articles', function () use ($app) {
+	try {
+		$conn = new Mongo();
+		$db = $conn->selectDB('myblogsite');
+		$coll = $db->selectCollection('articles');
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+	$cursor = $coll->find();
+
+    $app->render('blogs.html', array('cursor' => $cursor));
+});
 
 $app->run();
