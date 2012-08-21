@@ -19,6 +19,48 @@ $app = new Slim(array(
 	'view' => new MyView()
 ));
 
+//GET /
+$app->get('/test/bob', function () use ($app) {
+    try {
+		$conn = new Mongo();
+		$coll = $conn->myblogsite->articles;
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$cursor = $coll->find(array('comments.name' => 'Bob'));
+	die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
+
+});
+
+
+//PUT /articles/:id/comments - insert new comment for article
+$app->put('/articles/:article_id/comments', function ($article_id) use ($app) {
+
+	// die('<pre>' . print_r($_POST, 1) . '</pre>');
+	try {
+		$conn = new Mongo();
+		$coll = $conn->myblogsite->articles;
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$comment = array(
+		'name' => $app->request()->post('id_name'),
+		'email' => $app->request()->post('id_email'),
+		'comment' => $app->request()->post('id_comment'),
+		'posted_at' => new MongoDate()
+	);
+
+	$coll->update(array('_id' => new MongoId($article_id)), array(
+		'$push' => array('comments' => $comment)
+	));
+
+	$app->flash('success', 'Comment saved successfully for article ID: ' . $article_id);
+	$app->redirect('/blog/articles/' . $article_id);
+});
+
+
 //GET /articles/new
 $app->get('/articles/new', function () use ($app) {
     $app->render('blogpost.html', array());
@@ -52,10 +94,12 @@ $app->put('/articles', function () use ($app) {
 			return trim($tag);
 		}, explode(',', $app->request()->post('id_tags'))));
 
+		$time = new MongoDate();
 		$article = array(
 			'title' => $app->request()->post('id_title'),
 			'content' => $app->request()->post('id_content'),
-			'created_at' => new MongoDate(),
+			'created_at' => $time,
+			'updated_at' => $time,
 			'tags' => $tags_clean
 		);
 		$coll->insert($article);
@@ -69,6 +113,21 @@ $app->put('/articles', function () use ($app) {
 	// die('<pre>' . print_r($b, 1) . '</pre>');
 
 	$app->redirect('/blog/articles/new');
+});
+
+//GET /articles/:id
+$app->get('/articles/:id', function ($id) use ($app) {
+	try {
+		$conn = new Mongo();
+		$db = $conn->selectDB('myblogsite');
+		$coll = $db->selectCollection('articles');
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$article = $coll->findOne(array('_id' => new MongoId($id)));
+
+    $app->render('blog.html', array('article' => $article));
 });
 
 //POST /articles/:id - update article
@@ -85,10 +144,15 @@ $app->post('/articles/:id', function ($id) use ($app) {
 		$article = array(
 			'title' => $app->request()->post('id_title'),
 			'content' => $app->request()->post('id_content'),
-			'created_at' => new MongoDate(),
+			'updated_at' => new MongoDate(),
 			'tags' => $tags_clean
 		);
-		$coll->update(array('_id' => new MongoId($id)), $article);
+
+		// die('<pre>' . print_r($article, 1) . '</pre>');
+
+		$coll->update(array('_id' => new MongoId($id)), array(
+			'$set' => $article
+		));
 	} catch(MongoConnectionException $e) {
 		die("Failed to connect to database." . $e->getMessage());
 	} catch(MongoException $e) {
@@ -98,7 +162,23 @@ $app->post('/articles/:id', function ($id) use ($app) {
 	$app->flash('success', 'Article updated successfully. ID: ' . $id);
 	// die('<pre>' . print_r($b, 1) . '</pre>');
 
-	$app->redirect('/blog/articles/new');
+	$app->redirect('/blog/dashboard');
+});
+
+//DELETE /articles/:id - delete article
+$app->delete('/articles/:id', function ($id) use ($app) {
+	try {
+		$conn = new Mongo();
+		$coll = $conn->myblogsite->articles; 
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$coll->remove(array('_id' => new MongoId($id)));
+
+	$app->flash('success', 'Article deleted successfully. ID: ' . $id);
+
+	$app->redirect('/blog/dashboard');
 });
 
 //GET /articles/edit/:id
@@ -117,21 +197,6 @@ $app->get('/articles/:id/edit', function ($id) use ($app) {
 	// die('<pre>' . print_r($article, 1) . '</pre>');
 
     $app->render('blogpost.html', array('article' => $article));
-});
-
-//GET /articles/:id
-$app->get('/articles/:id', function ($id) use ($app) {
-	try {
-		$conn = new Mongo();
-		$db = $conn->selectDB('myblogsite');
-		$coll = $db->selectCollection('articles');
-	} catch(MongoConnectionException $e) {
-		die("Failed to connect to database " . $e->getMessage());
-	}
-
-	$article = $coll->findOne(array('_id' => new MongoId($id)));
-
-    $app->render('blog.html', array('article' => $article));
 });
 
 class Paginator {
@@ -186,9 +251,11 @@ $app->get('/dashboard', function () use ($app) {
 		die("Failed to connect to database " . $e->getMessage());
 	}
 
-	$cursor = $coll->find(array(), array('title', 'created_at'));
+	$cursor = $coll->find(array(), array('title', 'created_at', 'updated_at'));
 	$paginator = new Paginator($cursor, 5);
-	// die('<pre>' . print_r($paginator, 1) . '</pre>');
+	// $coll->update(array(), array('$set' => array('updated_at' => new MongoDate())), array('multiple' => True));
+	// die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
+
 
 	$cursor->sort(array('created_at'=>-1))->skip($paginator->get_skip())->limit(5);
 

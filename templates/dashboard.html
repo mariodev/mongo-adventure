@@ -50,6 +50,7 @@
             <th>#</th>
             <th>Title</th>
             <th>Created at</th>
+            <th>Updated at</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -59,9 +60,11 @@
 								<td>#</td>
 								<td><?php echo substr($article['title'], 0, 35) . '...'; ?></td>
 								<td><?php print date('g:i a, F j', $article['created_at']->sec) ?></td>
+								<td><?php print date('g:i a, F j', $article['updated_at']->sec) ?></td>
 								<td class="url">
 									<a href="/blog/articles/<?php echo $article['_id'] ?>">View</a> | 
-									<a href="/blog/articles/<?php echo $article['_id'] ?>/edit">Edit</a>
+									<a href="/blog/articles/<?php echo $article['_id'] ?>/edit">Edit</a> | 
+									<a class="delete" href="/blog/articles/<?php echo $article['_id'] ?>">Delete</a>
 								</td>
 							</tr>
 						<?php endwhile; ?>
