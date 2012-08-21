@@ -52,6 +52,13 @@
 					<a href="/blog/articles/<?php echo $article['_id']; ?>">Read more</a>
 				<?php endwhile; ?>
 			</div>
+			<div class="span12">
+				<div class="pagination" style="text-align: center;">
+					<ul>
+						<?php echo $paginator->render() ?>
+					</ul>
+				</div>
+			 </div>
 		</div>
 	</div>
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>

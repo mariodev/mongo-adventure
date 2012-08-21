@@ -59,7 +59,10 @@
 								<td>#</td>
 								<td><?php echo substr($article['title'], 0, 35) . '...'; ?></td>
 								<td><?php print date('g:i a, F j', $article['created_at']->sec) ?></td>
-								<td class="url"><a href="/blog/articles/<?php echo $article['_id'] ?>">View</a></td>
+								<td class="url">
+									<a href="/blog/articles/<?php echo $article['_id'] ?>">View</a> | 
+									<a href="/blog/articles/<?php echo $article['_id'] ?>/edit">Edit</a>
+								</td>
 							</tr>
 						<?php endwhile; ?>
 	        </tbody>

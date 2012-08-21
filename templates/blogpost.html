@@ -44,8 +44,11 @@
 		<p>Optional description</p>
 		<div class="row">
 			<div class="span12">
-				<form class="form-horizontal" method="post">
+				<form action="/blog/articles<?php if(isset($article['_id'])) echo '/'. $article['_id']; ?>" class="form-horizontal" method="post">
 					<fieldset>
+						<?php if(!isset($article['_id'])): ?>
+							<input type="hidden" name="_METHOD" value="PUT"/>
+						<?php endif; ?>
 						<div class="control-group">
 							<label class="control-label" for="id_title">Title</label>
 							<div class="controls">
