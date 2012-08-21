@@ -7,17 +7,17 @@
 session_cache_limiter(false);
 session_start();
 
-function valid_tag_filter($tag) {
-	$tags = explode(",", $tags);
-	$tags_clean = array();
+require 'lib/Slim/Slim/Slim.php';
 
-	foreach($tags as $tag) {
-		# code...
-	}
+class MyView extends Slim_View {
+	public function helper() {
+		return 'dummy';
+	} 
 }
 
-require 'lib/Slim/Slim/Slim.php';
-$app = new Slim();
+$app = new Slim(array(
+	'view' => new MyView()
+));
 
 //GET /articles/new
 $app->get('/articles/new', function () use ($app) {
@@ -55,6 +55,24 @@ $app->post('/articles/new', function () use ($app) {
 	$app->redirect('/blog/articles/new');
 });
 
+//GET /articles/edit/:id
+$app->get('/articles/edit/:id', function ($id) use ($app) {
+	// die('<pre>' . print_r($this, 1) . '</pre>');
+
+	try {
+		$conn = new Mongo();
+		$db = $conn->selectDB('myblogsite');
+		$coll = $db->selectCollection('articles');
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$article = $coll->findOne(array('_id' => new MongoId($id)));
+	// die('<pre>' . print_r($article, 1) . '</pre>');
+
+    $app->render('blogpost.html', array('article' => $article));
+});
+
 //GET /articles/:id
 $app->get('/articles/:id', function ($id) use ($app) {
 	try {
@@ -82,6 +100,67 @@ $app->get('/articles', function () use ($app) {
 	$cursor = $coll->find();
 
     $app->render('blogs.html', array('cursor' => $cursor));
+});
+
+class Paginator {
+	protected $articles = false;
+	protected $limit = 5;
+	protected $total = 0;
+	protected $current_page = 1;
+
+	function __construct($articles, $limit = 5) {
+		$this->limit = $limit;
+		$this->total = $articles->count();
+		$this->current_page = (isset($_GET['page'])) ? (int) $_GET['page'] : 1;
+	}
+
+	public function get_skip() {
+		return ($this->current_page - 1) * $this->limit;
+	}
+
+	public function get_total_pages() {
+		return (int) ceil($this->total / $this->limit);
+	}
+
+	public function render() {
+		$html = '';
+		$prev_disabled = $next_disabled = '';
+
+		if($this->current_page == 1) $prev_disabled = ' class="disabled"';
+		if($this->current_page == $this->get_total_pages()) $next_disabled = ' class="disabled"';
+
+
+		$html .= '<li' . $prev_disabled . '><a href="?page=' . ($this->current_page - 1) . '">Previous</a></li>';
+		for ($page=1; $page <= $this->get_total_pages() ; $page++) {
+			if($page == $this->current_page) {
+				$html .= '<li class="active"><a href="?page=' . $page . '">' . $page . '</a></li>';
+			} else {
+				$html .= '<li><a href="?page=' . $page . '">' . $page . '</a></li>';
+			}
+		}
+		$html .= '<li' . $next_disabled . '><a href="?page=' . ($this->current_page + 1) . '">Next</a></li>';
+		return $html;
+	}
+}
+
+//GET /dashboard
+$app->get('/dashboard', function () use ($app) {
+
+	try {
+		$conn = new Mongo();
+		$db = $conn->selectDB('myblogsite');
+		$coll = $db->selectCollection('articles');
+	} catch(MongoConnectionException $e) {
+		die("Failed to connect to database " . $e->getMessage());
+	}
+
+	$cursor = $coll->find(array(), array('title', 'created_at'));
+	$paginator = new Paginator($cursor, 5);
+	// die('<pre>' . print_r($paginator, 1) . '</pre>');
+
+	$cursor->sort(array('created_at'=>-1))->skip($paginator->get_skip())->limit(5);
+
+    $app->render('dashboard.html', array('cursor' => $cursor, 'paginator' => $paginator));
 });
 
 $app->run();
