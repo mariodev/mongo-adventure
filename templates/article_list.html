@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block container %}
+{% if flash['success'] %}
+	<div class="alert alert-success">
+		<button type="button" class="close" data-dismiss="alert">×</button>
+		<strong>Well done!</strong> {{ flash['success'] }}
+	</div>
+{% endif %}
+
+<h1>My Blogs</h1>
+<p>List of all my blogs</p>
+<div class="row">
+	<div class="span12">
+		{% for article in articles %}
+			<h2>{{ article.title }}</h2>
+			<p>{{ article.content|slug(200) }}</p>
+			<a href="{{ urlFor('view', {"id": article._id }) }}">Read full article</a>
+		{% endfor %}
+	</div>
+	<div class="span12">
+		<div class="pagination" style="text-align: center;">
+			<ul>
+				{{ paginator.render|raw }}
+			</ul>
+		</div>
+	 </div>
+</div>
+{% endblock %}

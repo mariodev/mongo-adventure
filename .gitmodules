@@ -1,3 +1,9 @@
 [submodule "lib/Slim"]
 	path = lib/Slim
 	url = git://github.com/codeguy/Slim.git
+[submodule "lib/extras"]
+	path = lib/extras
+	url = git://github.com/codeguy/Slim-Extras.git
+[submodule "lib/Twig"]
+	path = lib/Twig
+	url = git://github.com/fabpot/Twig.git

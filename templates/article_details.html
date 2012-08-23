@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block container %}
+{% if flash['success'] %}
+	<div class="alert alert-success">
+		<button type="button" class="close" data-dismiss="alert">×</button>
+		<strong>Well done!</strong> {{ flash['success'] }}
+	</div>
+{% endif %}
+<h1>My Blogs</h1>
+<p>List of all my blogs</p>
+<div class="row">
+	<div class="span12">
+		<h2>{{ article.title }}</h2>
+		<p>{{ article.content }}</p>
+		<a href="{{ urlFor('edit', {"id": article._id }) }}">Edit</a>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="span6">
+		<form action="{{ urlFor('comments', {"id": article._id }) }}" method="post" class="bs-docs-example form-horizontal">
+  <legend>Add new comment</legend>
+			<input type="hidden" name="_METHOD" value="PUT"/>
+  <div class="control-group">
+	<label class="control-label" for="id_name">Name</label>
+	<div class="controls">
+	  <input type="text" id="id_name" name="id_name" placeholder="Anonymous">
+	</div>
+  </div>
+  <div class="control-group">
+	<label class="control-label" for="id_email">E-mail</label>
+	<div class="controls">
+	  <input type="text" id="id_email" name="id_email" placeholder="E-mail">
+	</div>
+  </div>
+  <div class="control-group">
+				<label class="control-label" for="id_comment">Comment</label>
+				<div class="controls">
+					<textarea class="input-xlarge" id="id_comment" name="id_comment" rows="6"></textarea>
+				</div>
+			</div>
+  <div class="control-group">
+	<div class="controls">
+	  <button type="submit" class="btn">Submit</button>
+	</div>
+  </div>
+</form>
+	</div>
+	<div class="span6 comments">
+		{% if article.comments %}
+			<legend>Approved comments</legend>
+			{% for comment in article.comments %}
+				<div class="row">
+					<div class="span3">{{ comment.name }}, {{ comment.email }}</div>
+					<div style="text-align: right;" class="span3">{{ article.posted_at.sec|date("g:i a, F j") }}</div>
+				</div>
+				<div class="row">
+					<div class="span6">
+						<div class="well">{{ comment.comment }}</div>
+					</div>
+				</div>
+			{% endfor %}
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block container %}
+{% if flash['success'] %}
+	<div class="alert alert-success">
+		<button type="button" class="close" data-dismiss="alert">×</button>
+		<strong>Well done!</strong> {{ flash['success'] }}
+	</div>
+{% endif %}
+
+<h1>Blog Post Creator</h1>
+<p>Optional description</p>
+<div class="row">
+	<div class="span12">
+		<form action="/blog/articles{% if article._id %}/{{ article._id }}{% endif %}" class="form-horizontal" method="post">
+			<fieldset>
+				{% if article._id %}
+					<input type="hidden" name="_METHOD" value="PUT"/>
+				{% endif %}
+				<div class="control-group">
+					<label class="control-label" for="id_title">Title</label>
+					<div class="controls">
+						<input type="text" class="input-xlarge" id="id_title" name="id_title" value="{{ article.title|default('') }}">
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="id_content">Content</label>
+					<div class="controls">
+						<textarea class="input-xlarge" id="id_content" name="id_content" rows="6">{{ article.content|default('') }}</textarea>
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="id_tags">Tags</label>
+					<div class="controls">
+						<input type="text" class="input-xlarge" id="id_tags" name="id_tags" value="{% if article.tags %}{{ article.tags|join(', ') }}{% endif %}">
+						<p class="help-block">* Comma separated</p>
+					</div>
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary">Save</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+{% endblock %}

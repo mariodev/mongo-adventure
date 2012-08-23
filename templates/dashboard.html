@@ -1,85 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Dashboard</title>
-	<link href="/blog/css/bootstrap.css" rel="stylesheet">
-	<style>
-		body {
-			padding-top: 60px;
+{% extends "base.html" %}
 
-		}
-	</style>
-	<link href="/blog/css/bootstrap-responsive.css" rel="stylesheet">
-	<link href="/blog/css/base.css" rel="stylesheet">
-</head>
-<body>
-	<div class="navbar navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</a>
-				<a class="brand" href="#">Project name</a>
-				<div class="nav-collapse">
-					<ul class="nav">
-						<li class="active"><a href="/blog/dashboard">Dashboard</a></li>
-						<li><a href="/blog/articles">Articles</a></li>
-						<li><a href="/blog/articles/new">New article</a></li>
-					</ul>
-				</div><!--/.nav-collapse -->
-			</div>
+{% block container %}
+{% if flash['success'] %}
+	<div class="alert alert-success">
+		<button type="button" class="close" data-dismiss="alert">×</button>
+		<strong>Well done!</strong> {{ flash['success'] }}
+	</div>
+{% endif %}
+<h1>Dashboard</h1>
+<p>List of articles</p>
+<div class="row">
+	<div class="span12">
+		<table class="table table-striped">
+			<thead>
+			  <tr>
+					<th>#</th>
+					<th>Title</th>
+					<th>Created at</th>
+					<th>Updated at</th>
+					<th>Action</th>
+			  </tr>
+			</thead>
+			<tbody>
+				{% for article in articles %}
+					<tr>
+						<td>#</td>
+						<td>{{ article.title|slug(35) }}</td>
+						<td>{{ article.created_at.sec|date("g:i a, F j") }}</td>
+						<td>{{ article.updated_at.sec|date("g:i a, F j") }}</td>
+						<td>
+							<a href="{{ urlFor('view', {"id": article._id }) }}">View</a> | 
+							<a href="{{ urlFor('edit', {"id": article._id }) }}">Edit</a> | 
+							<a class="delete" href="{{ urlFor('delete', {"id": article._id }) }}">Delete</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		<div class="pagination" style="text-align: center;">
+			<ul>
+			  {{ paginator.render|raw }}
+			</ul>
 		</div>
 	</div>
-	<div class="container">
-		<?php if($flash['success']): ?>
-			<div class="alert alert-success">
-				<button type="button" class="close" data-dismiss="alert">×</button>
-				<strong>Well done!</strong> <?php echo $flash['success'] ?>
-			</div>
-		<?php endif; ?>
-		<h1>Dashboard</h1>
-		<p>List of articles</p>
-		<div class="row">
-			<div class="span12">
-				<table class="table table-striped">
-					<thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Created at</th>
-            <th>Updated at</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-	        <tbody>
-						<?php while($cursor->hasNext()): $article = $cursor->getNext(); ?>
-							<tr>
-								<td>#</td>
-								<td><?php echo substr($article['title'], 0, 35) . '...'; ?></td>
-								<td><?php print date('g:i a, F j', $article['created_at']->sec) ?></td>
-								<td><?php print date('g:i a, F j', $article['updated_at']->sec) ?></td>
-								<td class="url">
-									<a href="/blog/articles/<?php echo $article['_id'] ?>">View</a> | 
-									<a href="/blog/articles/<?php echo $article['_id'] ?>/edit">Edit</a> | 
-									<a class="delete" href="/blog/articles/<?php echo $article['_id'] ?>">Delete</a>
-								</td>
-							</tr>
-						<?php endwhile; ?>
-	        </tbody>
-				</table>
-				<div class="pagination" style="text-align: center;">
-	        <ul>
-	          <?php echo $paginator->render() ?>
-	        </ul>
-	      </div>
-			</div>
-		</div>
-	</div>
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-	<script src="/blog/js/bootstrap.js"></script>
-	<script src="/blog/js/application.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}
