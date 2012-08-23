@@ -9,6 +9,7 @@ require 'lib/Slim/Slim/Slim.php';
 require 'lib/TwigView.php';
 require_once('lib/dbconnection.php');
 require('lib/paginator.php');
+require('lib/session.php');
 
 $app = new Slim(array(
 	'view' => 'TwigView'
@@ -29,6 +30,54 @@ $app->get('/test', function () use ($app) {
 	// die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
     $app->render('test.html', array('name' => 'mario'));
 
+});
+
+
+
+//GET /profile
+$app->get('/profile', function() use ($app) {
+	require('lib/user.php');
+	$user = new User();
+
+    $app->render('profile.html', array('user' => $user));
+});
+
+
+//GET /login
+$app->get('/login', function() use ($app) {
+
+    $app->render('login.html', array());
+});
+
+
+//POST /login
+$app->post('/login', function() use ($app) {
+	
+	require('lib/user.php');
+
+	$user = new User();
+	$username = $app->request()->post('id_username');
+	$password = $app->request()->post('id_password');
+
+	if($user->authenticate($username, $password)) {
+	    $app->flash('success', 'You have successfully logged in.');
+		$app->redirect('/blog/profile');
+	} else {
+		$app->flash('error', 'Incorrect login details.');
+		$app->redirect('/blog/login');
+	}
+});
+
+
+//GET /logout
+$app->get('/logout', function() use ($app) {
+	require('lib/user.php');
+
+	$user = new User();
+	$user->logout();
+
+    $app->flash('success', 'You have successfully logged out.');
+	$app->redirect('/blog/login');
 });
 
 
@@ -98,7 +147,7 @@ $app->put('/articles', function () use ($app) {
 	}
 
 	$app->flash('success', 'Article saved successfully. ID: ' . $article['_id']);
-	$app->redirect('/blog/articles/new');
+	$app->redirect('/blog/dashboard');
 });
 
 

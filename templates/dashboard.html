@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block container %}
-{% if flash['success'] %}
+{% if flash.success %}
 	<div class="alert alert-success">
 		<button type="button" class="close" data-dismiss="alert">×</button>
-		<strong>Well done!</strong> {{ flash['success'] }}
+		<strong>Well done!</strong> {{ flash.success }}
 	</div>
 {% endif %}
 <h1>Dashboard</h1>

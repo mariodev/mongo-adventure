@@ -14,7 +14,7 @@
 	<div class="span12">
 		<form action="/blog/articles{% if article._id %}/{{ article._id }}{% endif %}" class="form-horizontal" method="post">
 			<fieldset>
-				{% if article._id %}
+				{% if not article._id %}
 					<input type="hidden" name="_METHOD" value="PUT"/>
 				{% endif %}
 				<div class="control-group">

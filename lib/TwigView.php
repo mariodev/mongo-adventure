@@ -56,7 +56,7 @@ class TwigView extends Slim_View {
     /**
      * @var TwigExtension The Twig extensions you want to load
      */
-    public static $twigExtensions = array('Twig_Extensions_Slim');
+    public static $twigExtensions = array('Twig_Extensions_Slim', 'Twig_Extension_Debug');
 
     /**
      * @var TwigEnvironment The Twig environment for rendering templates.
