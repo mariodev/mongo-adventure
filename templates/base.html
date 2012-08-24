@@ -25,12 +25,15 @@
 				<a class="brand" href="#">Project name</a>
 				<div class="nav-collapse">
 					<ul class="nav">
-						<li><a href="/blog/login">Login</a></li>
+						{% if user.isLoggedIn %}
+							<li><a href="/blog/logout">Logout</a></li>
+							<li><a href="/blog/profile">Profile</a></li>
+							<li><a href="/blog/articles/new">New article</a></li>
+						{% else %}
+							<li><a href="/blog/login">Login</a></li>
+						{% endif %}
 						<li><a href="/blog/dashboard">Dashboard</a></li>
 						<li><a href="/blog/articles">Articles</a></li>
-						<li><a href="/blog/articles/new">New article</a></li>
-						<li><a href="/blog/profile">Profile</a></li>
-						<li><a href="/blog/logout">Logout</a></li>
 					</ul>
 				</div><!--/.nav-collapse -->
 			</div>

@@ -49,6 +49,7 @@ class SessionManager {
 	public function read($session_id) {
 		$query = array(
 			'session_id' => $session_id,
+			'user_agent' => $_SERVER['HTTP_USER_AGENT'],
 			'timeout_at' => array('$gte' => time()),
 			'expired_at' => array(
 				'$gte' => time() - SessionManager::SESSION_LIFESPAN
@@ -71,7 +72,7 @@ class SessionManager {
 				time() + SessionManager::SESSION_LIFESPAN : $this->_currentSession['expired_at']
 		);
 
-		$query = array('session_id' => $session_id);
+		$query = array('session_id' => $session_id, 'user_agent' => $_SERVER['HTTP_USER_AGENT']);
 		$this->_collection->update(
 			$query,
 			array('$set' => $new_obj),
@@ -81,7 +82,7 @@ class SessionManager {
 	}
 
 	public function destroy($session_id) {
-		$this->_collection->remove(array('session_id' => $session_id));
+		$this->_collection->remove(array('session_id' => $session_id, 'user_agent' => $_SERVER['HTTP_USER_AGENT']));
 		return True;
 	}
 

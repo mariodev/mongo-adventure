@@ -25,4 +25,6 @@ class Twig_Extensions_Slim extends Twig_Extension {
     public function slug($string, $cut = 35) {
         return substr($string, 0, $cut) . '...';
     }
+
+    
 }

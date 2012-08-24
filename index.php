@@ -7,14 +7,44 @@
 
 require 'lib/Slim/Slim/Slim.php';
 require 'lib/TwigView.php';
+require 'lib/paginator.php';
+
 require_once('lib/dbconnection.php');
-require('lib/paginator.php');
-require('lib/session.php');
+require_once('lib/session.php');
+require_once('lib/user.php');
+
+
 
 $app = new Slim(array(
 	'view' => 'TwigView'
 ));
 
+$user = new User($app);
+
+$authorize = function($role = 'all') use($user, $app) {
+	return function() use($role, $user, $app) {
+		// die(var_dump($role));
+		switch($role) {
+			case "edit.article":
+				$params = $app->router()->getCurrentRoute()->getParams();
+
+				$article = DBConnection::init()
+					->getCollection('articles')
+					->findOne(array('_id' => new MongoId($params['id']), 'author_id' => new MongoId($user->_id)));
+				if(!isset($article)) {
+					$app->error();
+				}
+				break;
+			case 'logged':
+				if(!$user->isLoggedIn()) {
+					$app->error();
+				}
+				break;
+		}
+	};
+};
+
+$app->view()->appendData(array('user' => $user));
 
 //GET /
 $app->get('/test', function () use ($app) {
@@ -28,7 +58,7 @@ $app->get('/test', function () use ($app) {
 
 	// $cursor = $coll->find(array('comments.name' => 'Bob'));
 	// die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
-    $app->render('test.html', array('name' => 'mario'));
+	$app->render('test.html', array('name' => $app));
 
 });
 
@@ -36,31 +66,25 @@ $app->get('/test', function () use ($app) {
 
 //GET /profile
 $app->get('/profile', function() use ($app) {
-	require('lib/user.php');
-	$user = new User();
 
-    $app->render('profile.html', array('user' => $user));
+	$app->render('profile.html');
 });
 
 
 //GET /login
 $app->get('/login', function() use ($app) {
 
-    $app->render('login.html', array());
+	$app->render('login.html', array());
 });
 
 
 //POST /login
-$app->post('/login', function() use ($app) {
-	
-	require('lib/user.php');
-
-	$user = new User();
+$app->post('/login', function() use ($app, $user) {
 	$username = $app->request()->post('id_username');
 	$password = $app->request()->post('id_password');
 
 	if($user->authenticate($username, $password)) {
-	    $app->flash('success', 'You have successfully logged in.');
+		$app->flash('success', 'You have successfully logged in.');
 		$app->redirect('/blog/profile');
 	} else {
 		$app->flash('error', 'Incorrect login details.');
@@ -70,13 +94,10 @@ $app->post('/login', function() use ($app) {
 
 
 //GET /logout
-$app->get('/logout', function() use ($app) {
-	require('lib/user.php');
-
-	$user = new User();
+$app->get('/logout', function() use ($app, $user) {
 	$user->logout();
 
-    $app->flash('success', 'You have successfully logged out.');
+	$app->flash('success', 'You have successfully logged out.');
 	$app->redirect('/blog/login');
 });
 
@@ -101,13 +122,7 @@ $app->put('/articles/:article_id/comments', function ($article_id) use ($app) {
 })->name('comments');
 
 
-//GET /articles/new
-$app->get('/articles/new', function () use ($app) {
-    $app->render('article_form.html', array());
-});
-
-
-//GET /articles
+//GET /articles - get article list
 $app->get('/articles', function () use ($app) {
 	$coll = DBConnection::init()->getCollection('articles');
 
@@ -118,14 +133,20 @@ $app->get('/articles', function () use ($app) {
 		->limit(10);
 	$articles = iterator_to_array($cursor);
 
-    $app->render('article_list.html', array(
-    	'articles' => $articles, 'paginator' => $paginator)
-    );
+	$app->render('article_list.html', array(
+		'articles' => $articles, 'paginator' => $paginator)
+	);
+});
+
+
+//GET /articles/new
+$app->get('/articles/new', $authorize('logged'), function () use ($app) {
+	$app->render('article_form.html');
 });
 
 
 //PUT /articles - create new article post
-$app->put('/articles', function () use ($app) {
+$app->put('/articles', $authorize('logged'), function () use ($app, $user) {
 	$coll = DBConnection::init()->getCollection('articles');
 	try {
 		// some dummy validating
@@ -139,7 +160,8 @@ $app->put('/articles', function () use ($app) {
 			'content' => $app->request()->post('id_content'),
 			'created_at' => $time,
 			'updated_at' => $time,
-			'tags' => $tags_clean
+			'tags' => $tags_clean,
+			'author_id' => $user->_id
 		);
 		$coll->insert($article);
 	} catch(MongoException $e) {
@@ -156,12 +178,12 @@ $app->get('/articles/:id', function ($id) use ($app) {
 	$coll = DBConnection::init()->getCollection('articles');
 	$article = $coll->findOne(array('_id' => new MongoId($id)));
 
-    $app->render('article_details.html', array('article' => $article));
+	$app->render('article_details.html', array('article' => $article));
 })->name('view');
 
 
 //POST /articles/:id - update article
-$app->post('/articles/:id', function ($id) use ($app) {
+$app->post('/articles/:id', $authorize('edit.article'), function ($id) use ($app) {
 	$coll = DBConnection::init()->getCollection('articles');
 	try {
 		// some dummy validating
@@ -189,7 +211,7 @@ $app->post('/articles/:id', function ($id) use ($app) {
 
 
 //DELETE /articles/:id - delete article
-$app->delete('/articles/:id', function ($id) use ($app) {
+$app->delete('/articles/:id', $authorize('edit.article'), function ($id) use ($app) {
 	$coll = DBConnection::init()->getCollection('articles');
 	$coll->remove(array('_id' => new MongoId($id)));
 
@@ -199,19 +221,31 @@ $app->delete('/articles/:id', function ($id) use ($app) {
 
 
 //GET /articles/edit/:id
-$app->get('/articles/:id/edit', function ($id) use ($app) {
+$app->get('/articles/:id/edit', $authorize('edit.article'), function ($id) use ($app) {
 	$article = DBConnection::init()
 		->getCollection('articles')
 		->findOne(array('_id' => new MongoId($id)));
-
-    $app->render('article_form.html', array('article' => $article));
+	// die(var_dump($article));
+	$app->render('article_form.html', array('article' => $article));
 })->name('edit');
 
 
+class Secret_Middleware extends Slim_Middleware {
+	public function call() {
+		$app = $this->app;
+		$req = $app->request();
+		$res = $app->response();
+		$router = $app->router();
+		die(var_dump($router->getCurrentRoute()->getPattern()));
+		$this->next->call();
+	}
+}
+
+
 //GET /dashboard
-$app->get('/dashboard', function () use ($app) {
+$app->get('/dashboard', function () use ($app, $user) {
 	$coll = DBConnection::init()->getCollection('articles');
-	$cursor = $coll->find(array(), array('title', 'created_at', 'updated_at'));
+	$cursor = $coll->find(array('author_id' => new MongoId($user->_id)), array('title', 'created_at', 'updated_at'));
 	$paginator = new Paginator($cursor, 5);
 	// $coll->update(array(), array('$set' => array('updated_at' => new MongoDate())), array('multiple' => True));
 	// die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
@@ -219,7 +253,7 @@ $app->get('/dashboard', function () use ($app) {
 	$cursor->sort(array('created_at'=>-1))->skip($paginator->get_skip())->limit(5);
 	
 	$articles = iterator_to_array($cursor);
-    $app->render('dashboard.html', array('articles' => $articles, 'paginator' => $paginator));
+	$app->render('dashboard.html', array('articles' => $articles, 'paginator' => $paginator));
 });
 
 $app->run();

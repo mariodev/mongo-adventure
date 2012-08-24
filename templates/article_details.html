@@ -13,7 +13,9 @@
 	<div class="span12">
 		<h2>{{ article.title }}</h2>
 		<p>{{ article.content }}</p>
-		<a href="{{ urlFor('edit', {"id": article._id }) }}">Edit</a>
+		{% if article.author_id == user._id %}
+			<a href="{{ urlFor('edit', {"id": article._id }) }}">Edit</a>
+		{% endif %}
 	</div>
 </div>
 <hr>
