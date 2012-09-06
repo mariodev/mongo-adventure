@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block container %}
+<h1>Analytics</h1>
+<h3>Most viewed articles (last 7 days)</h3>
+<div class="row">
+	<div class="span12">
+		<table class="table table-striped">
+			<thead>
+			  <tr>
+					<th>#</th>
+					<th>Title</th>
+					<th>Page views</th>
+					<th>Avg response time</th>
+			  </tr>
+			</thead>
+			<tbody>
+				{% for log in logs %}
+					<tr>
+						<td>#</td>
+						<td>{{ log._id }}</td>
+						<td>{{ log.value.count }}</td>
+						<td>{{ log.value.avg_resp_time }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		<div class="pagination" style="text-align: center;">
+			<ul>
+			  {{ paginator.render|raw }}
+			</ul>
+		</div>
+	</div>
+</div>
+{% endblock %}

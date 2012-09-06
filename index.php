@@ -12,14 +12,19 @@ require 'lib/paginator.php';
 require_once('lib/dbconnection.php');
 require_once('lib/session.php');
 require_once('lib/user.php');
-
+require_once('lib/log.php');
+// require_once 'lib/middlewares.php';
 
 
 $app = new Slim(array(
 	'view' => 'TwigView'
 ));
-
+// $app->hook('slim.before.dispatch', function () use ($app) {
+// 	die(var_dump());
+// });
 $user = new User($app);
+// $app->add(new Secret_Middleware());
+$start = microtime();
 
 $authorize = function($role = 'all') use($user, $app) {
 	return function() use($role, $user, $app) {
@@ -62,6 +67,42 @@ $app->get('/test', function () use ($app) {
 
 });
 
+
+//GET /analytics
+$app->get('/analytics', function() use ($app) {
+
+	$map = "function() { emit(this.query_params.id, {count: 1,".
+		"resp_time: this.response_time_ms}) }";
+	
+	$reduce = "function(key, values) { ".
+		"var total_count = 0;".
+		"var total_resp_time = 0;".
+		"values.forEach(function(doc) {".
+			"total_count += doc.count;".
+			"total_resp_time += doc.resp_time;".
+		"});".
+		"return {count: total_count, resp_time: total_resp_time};".
+	"}";
+
+	$finalize = "function(key, doc) {".
+		"doc.avg_resp_time = doc.resp_time / doc.count;".
+		"return doc;".
+	"}";
+	$db = DBConnection::init()->database;
+	$db->command(array(
+		'mapreduce' => 'access_log',
+		'map' => new MongoCode($map),
+		'reduce' => new MongoCode($reduce),
+		'query' => array('page' => '/articles/:id', 'method' => 'GET',
+						'viewed_at' => array('$gt' => new MongoDate(strtotime('-7 days')))),
+		'finalize' => new MongoCode($finalize),
+		'out' => 'page_views_last_week'
+	));
+
+	$results = DBConnection::init()->getCollection('page_views_last_week')->find(); //->sort(array('value.count' => -1));
+	// die(var_dump(iterator_to_array($results)));
+	$app->render('analytics.html', array('logs' => iterator_to_array($results)));
+});
 
 
 //GET /profile
@@ -230,18 +271,6 @@ $app->get('/articles/:id/edit', $authorize('edit.article'), function ($id) use (
 })->name('edit');
 
 
-class Secret_Middleware extends Slim_Middleware {
-	public function call() {
-		$app = $this->app;
-		$req = $app->request();
-		$res = $app->response();
-		$router = $app->router();
-		die(var_dump($router->getCurrentRoute()->getPattern()));
-		$this->next->call();
-	}
-}
-
-
 //GET /dashboard
 $app->get('/dashboard', function () use ($app, $user) {
 	$coll = DBConnection::init()->getCollection('articles');
@@ -257,3 +286,8 @@ $app->get('/dashboard', function () use ($app, $user) {
 });
 
 $app->run();
+
+$end = microtime();
+$data = array('response_time_ms' => ($end - $start) * 1000);
+$logger = new Logger($app);
+$logger->logRequest($data);

@@ -28,13 +28,7 @@ class Paginator {
 
 
 		$html .= '<li' . $prev_disabled . '><a href="?page=' . ($this->current_page - 1) . '">Previous</a></li>';
-		for ($page=1; $page <= $this->get_total_pages() ; $page++) {
-			if($page == $this->current_page) {
-				$html .= '<li class="active"><a href="?page=' . $page . '">' . $page . '</a></li>';
-			} else {
-				$html .= '<li><a href="?page=' . $page . '">' . $page . '</a></li>';
-			}
-		}
+		$html .= '<span> Page ' . $this->current_page . ' </span>';
 		$html .= '<li' . $next_disabled . '><a href="?page=' . ($this->current_page + 1) . '">Next</a></li>';
 		return $html;
 	}

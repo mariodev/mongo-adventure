@@ -72,7 +72,7 @@ function createDoc() {
 }
 
 $mongo = DBConnection::init();
-$coll = $mongo->getCollection('sample_articles');
+$coll = $mongo->getCollection('articles');
 echo 'Generating sample data...<br />';
 for($i = 0; $i < 1000; $i++) {
 	$doc = createDoc();
