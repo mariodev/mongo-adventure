@@ -2,7 +2,7 @@
 class DBConnection {
 	const HOST = 'localhost';
 	const PORT = 27017;
-	const DBNAME = 'myblogsite';
+	const DBNAME = 'acmeproducts_mongo';
 
 	private static $instance;
 	public $connection;

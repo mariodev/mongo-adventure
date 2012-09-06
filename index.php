@@ -68,6 +68,45 @@ $app->get('/test', function () use ($app) {
 });
 
 
+//GET /aggregate
+$app->get('/aggregate', function() use ($app) {
+	require 'lib/mysql.php';
+	$sql = 'SELECT name, DATE(time_of_sales) as date_of_sales, SUM(units_sold) as total_units_sold '
+		  .'FROM sales s INNER JOIN products p ON (p.id = s.product_id) '
+		  .'GROUP BY product_id, DATE(time_of_sales)';
+
+	$result = $db->get_results($sql);
+	$sales_by_date = array();
+	foreach($result as $row) {
+		$date = $row->date_of_sales;
+	    $product = $row->name;
+	    $total_sold = $row->total_units_sold;
+	    $sales_per_product = (isset($sales_by_date[$date])) ? $sales_by_date[$date] : array();
+		$sales_per_product[$product] = $total_sold;
+		$sales_by_date[$date] = $sales_per_product;
+	}
+
+	$mongodb = DBConnection::init();
+	$collection = $mongodb->getCollection('daily_sales');
+	foreach($sales_by_date as $date => $sales) {
+		$doc = array(
+			'sales_date' => new MongoDate(strtotime($date)),
+			'items' => array()
+		);
+
+		foreach($sales as $product => $units_sold) {
+			$doc['items'][$product] = $units_sold;
+		}
+
+		$collection->insert($doc);
+	}
+});
+
+//GET /sales
+$app->get('/sales', function() use ($app) {
+
+});
+
 //GET /analytics
 $app->get('/analytics', function() use ($app) {
 
