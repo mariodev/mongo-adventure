@@ -42,7 +42,7 @@ class db {
 	private $start_time = null;
 	private $exec_time = null;
 	private $mode = array ( 'OBJECT' => PDO::FETCH_OBJ, 'ARRAY' => PDO::FETCH_ASSOC );
-	
+	// private $output = null;
 	
 	/**
 	 * configure db class properities
@@ -274,16 +274,25 @@ class db {
 	private function _query() {
 		$this->_reset();
 		if ( $this->pdo ) {
+			// var_dump($this->query);
 			$statement = $this->pdo->query( $this->query );
 			$error = $this->pdo->errorInfo();
+			// var_dump($error);
+			// var_dump($statement);
+			// die();
 			if ( $statement == false && isset( $error['1'] ) ) {
 				$this->_show_error( $error['2'] );
 			} else {
 				if ( preg_match( "/^\s*(insert|update|replace|delete)\s+/i", strtolower( $this->query ) ) ) {
  					$this->affected_rows = $statement->rowCount();
+ 					// var_dump($statement);
  				}
 				if ( preg_match( "/^\s*(insert|replace)\s+/i", strtolower( $this->query ) ) ) {
- 					$this->insert_id = $this->pdo->lastInsertId();	
+ 					$this->insert_id = $this->pdo->lastInsertId();
+ 				// 	var_dump($this->insert_id);
+ 				// 	echo 'dasdsa';
+					// var_dump($statement);
+
  				}
  				return $statement;
 			}
@@ -309,7 +318,8 @@ class db {
 				$this->result = false;
 				break;
 			case __CLASS__.'::get_row':
-				$this->result = ( $this->output == 'ARRAY' ? array() : null );
+				// $this->result = ( $this->output == 'ARRAY' ? array() : null );
+				$this->result = null;
 				break;
 			default:
 				$this->result = array();
@@ -348,7 +358,8 @@ class db {
 	 */
 	private function _show_error( $txt ) {
 		if ( $this->error === true ) {
-			echo '<b>DB_ERROR:</b> ' . $txt . '<br />' . ( empty( $this->query ) == false ? '<b>QUERY:</b> ' . $this->query . '<br />' : '' );
+			throw new Exception($txt);
+			// echo '<b>DB_ERROR:</b> ' . $txt . '<br />' . ( empty( $this->query ) == false ? '<b>QUERY:</b> ' . $this->query . '<br />' : '' );
 		}
 	}
 	

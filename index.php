@@ -63,8 +63,21 @@ $app->get('/test', function () use ($app) {
 
 	// $cursor = $coll->find(array('comments.name' => 'Bob'));
 	// die('<pre>' . print_r(iterator_to_array($cursor, true), 1) . '</pre>');
-	$app->render('test.html', array('name' => $app));
+	// $app->render('test.html', array('name' => $app));
+	// require 'lib/mysql.php';
+	// require_once 'lib/customer.php';
+	// $customer = new Customer();
 
+	// $customer->first_name = 'Frideric';
+	// $customer->last_name = 'Bastiat';
+	// $customer->email = 'mario@xx.pl';
+	// $customer->date_of_birth = '1919-09-25';
+	
+	// $customer->save();
+	// var_dump($customer->id);
+	// echo $customer->date_of_birth;
+
+	// die('<pre>' . print_r($customer) . '</pre>');
 });
 
 
